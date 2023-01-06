@@ -3,15 +3,12 @@ import datetime
 import random
 import typing
 from typing import Dict, Any
-
 from moviebotapi.core.models import MediaType
 from moviebotapi.subscribe import SubStatus, Subscribe
-
 import json
 import shutil
 from mbot.openapi import mbot_api
 from mbot.core.plugins import *
-
 import logging
 import time
 import yaml
@@ -24,14 +21,12 @@ param = {'language': 'zh-CN'}
 _LOGGER = logging.getLogger(__name__)
 message_to_uid: typing.List[int] = []
 
-
 @plugin.after_setup
 def after_setup(plugin_meta: PluginMeta, config: Dict[str, Any]):
     global set_pic_url
     global message_to_uid
     set_pic_url = config.get('set_pic_url')
     message_to_uid = config.get('uid')
-
     # if os.path.exists('/app/frontend/static/tv_calendar.html'):
     #     os.remove('/app/frontend/static/tv_calendar.html')
     # if os.path.exists('/app/frontend/static/episode.html'):
@@ -50,9 +45,10 @@ def config_changed(config: Dict[str, Any]):
     set_pic_url = config.get('set_pic_url')
     message_to_uid = config.get('uid')
 
-
 @plugin.task('save_json', '剧集更新', cron_expression='10 0 * * *')
 def task():
+    # 怕并发太高，衣总服务器撑不住
+    time.sleep(random.randint(1, 3600))
     save_json()
 
 def get_tmdb_info(tv_id, season_number):
@@ -77,7 +73,6 @@ def get_tv_info(tv_id):
     for i in range(5):
         try:
             result = server.tmdb.request_api(tv_api_url % {'tv_id': tv_id}, param)
-            # _LOGGER.error(f'「get_tv_info」请求结果：{result}')
             break
         except Exception as e:
             _LOGGER.error(f'「get_tv_info」请求异常，原因：{e}')
@@ -95,7 +90,6 @@ def find_season_poster(seasons, season_number):
         if season_number == season['season_number']:
             return season['poster_path']
     return ''
-
 
 def save_json():
     _LOGGER.info('开始执行剧集数据更新')
@@ -137,15 +131,11 @@ def save_json():
     push_message()
     _LOGGER.info('追剧日历数据更新进程全部完成')
 
-
 def get_after_day(day, n):
-    # 今天的时间
-    # 计算偏移量
     offset = datetime.timedelta(days=n)
     # 获取想要的日期的时间
     after_day = day + offset
     return after_day
-
 
 def get_server_url():
     try:
@@ -153,12 +143,14 @@ def get_server_url():
         with open(yml_file, encoding='utf-8') as f:
             yml_data = yaml.load(f, Loader=yaml.FullLoader)
         mr_url = yml_data['web']['server_url']
-        if (re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', mr_url) != None):
+        if mr_url is None or mr_url == '':
+          return ''
+        if (re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', mr_url) is not None):
             _LOGGER.info(f'从配置文件中获取到的「mr_url」{mr_url}')
             return mr_url
     except Exception as e:
-                _LOGGER.error(f'获取「mr_url」异常，原因: {e}')
-                pass
+        _LOGGER.error(f'获取「mr_url」异常，原因: {e}')
+        pass
     return '' 
 def push_message():
     mr_url = ''
@@ -168,7 +160,6 @@ def push_message():
     mr_url = get_server_url()
     if mr_url:
         link_url = f'{mr_url}/static/tv_calendar.html'
-        # _LOGGER.error(f'mr_url: {mr_url}，all:{link_url}')
     try:
         with open('/app/frontend/static/original.json', encoding='utf-8') as f:
             episode_arr = json.load(f)
@@ -182,13 +173,11 @@ def push_message():
                 name_dict[item['tv_name']].append(item)
         img_api = 'https://api.r10086.com/img-api.php?type=%E5%8A%A8%E6%BC%AB%E7%BB%BC%E5%90%88' + str(
             random.randint(1, 18))
-        
         _LOGGER.info(f'设置的消息封面图片地址: {set_pic_url}')
         if set_pic_url:
             pic_url = set_pic_url
         else:
             pic_url = img_api
-
         if len(episode_arr) == 0:
             message = "今日没有剧集更新"
         else:
