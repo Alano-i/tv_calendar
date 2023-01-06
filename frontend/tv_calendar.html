@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>剧集日历</title>
+    <link
+            rel="stylesheet"
+            href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"
+    />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover"
+    />
+    <style>
+        :root {
+            --van-background-2: #00ff0000
+        }
+        .van-theme-dark body {
+            color: white;
+            background-color: black;
+            text-align: center;
+        }
+        .van-grid-item__content{
+            padding: 0px;
+        }
+        .van-grid-item__content--center {
+            align-items: center;
+            justify-content: start;
+        }
+        [v-cloak] {
+            display: none;
+        }
+        .text-ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 1;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <van-config-provider theme="dark">
+        <van-image fit="fill" width="100%" src="/static/banner.jpg" ></van-image>
+        <template v-if="status==false">
+            <van-empty   image="https://fastly.jsdelivr.net/npm/@vant/assets/custom-empty-image.png"  image-size="120" description="怎么肥事!!怎么肥事!!" />
+        </template>
+        <template v-else>
+            <template v-for="(val,key,i) in date_dict" :key="i">
+                <van-divider :style="{ fontSize:'20px' ,color: 'white', borderColor: 'white', padding: '0 16px' }">
+                    {{dateFormat(key)+' '+getWeek(key)}}
+                </van-divider>
+                <van-grid :border="false"  :gutter="15" :column-num="3">
+
+                    <van-grid-item v-for="(list,key2,j) in val" :key="j" text="文字" style="border-radius: 20px;"  @click="toDetail(list[0].show_id,list[0].season_number)">
+                        <van-image
+                                style="width: 100%;height: 87%;border-radius: 10px;overflow: hidden"
+                                lazy-load
+                                :src="list[0].season_poster!=null?imageBaseUrl+list[0].season_poster:imageBaseUrl+list[0].tv_poster"
+                        ></van-image>
+                        <h6 style="margin: 5px auto;" class="text-ellipsis">{{list[0].tv_name?list[0].tv_name:tv_original_name}}第{{list[0].season_number}}季</h6>
+                        <p v-if="list.length>1" style="margin: 2px auto;">第{{list[0].episode_number}}-{{list[list.length-1].episode_number}}集</p>
+                        <p v-else style="margin: 2px auto;">第{{list[0].episode_number}}集</p>
+
+
+                    </van-grid-item>
+
+                </van-grid>
+            </template>
+            <van-back-top />
+        </template>
+    </van-config-provider>
+    <van-number-keyboard safe-area-inset-bottom></van-number-keyboard>
+</div>
+<script src="https://fastly.jsdelivr.net/npm/vue@3"></script>
+<script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                date_dict: [],
+                imageBaseUrl: 'https://image.tmdb.org/t/p/w500',
+                offset: 7,
+                status: true
+            }
+        },
+        methods: {
+            getDate(strDate){
+                return new Date((strDate).replace(/-/g,"/"))
+            },
+            dateFormat(dateStr){
+                date = this.getDate(dateStr) //转换成Data();
+                var y = date.getFullYear();
+                var m = date.getMonth() + 1;
+                m = m < 10 ? '0' + m : m;
+                var d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                return y + '年' + m + '月' + d + '日';
+            },
+            toDetail(showId, seasonNumber) {
+                location.href = 'episode.html?showId=' + showId + "&seasonNumber=" + seasonNumber
+            },
+            getWeek(date) {
+                const weekArr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+                return weekArr[new Date(date).getDay()]
+            },
+            getDateStr(addDayCount) {
+                var dd = new Date();
+                dd.setDate(dd.getDate() + addDayCount);//获取AddDayCount天后的日期
+                var y = dd.getFullYear();
+                var m = dd.getMonth() + 1;//获取当前月份的日期
+                var d = dd.getDate();
+                //判断 月
+                if (m < 10) {
+                    m = "0" + m;
+                } else {
+                    m = m;
+                }
+                //判断 日n
+                if (d < 10) {//如果天数<10
+                    d = "0" + d;
+                } else {
+                    d = d;
+                }
+                return y + "-" + m + "-" + d;
+            },
+            getEpisodes() {
+                axios({
+                    method: 'get',
+                    url: '/static/original.json',
+
+                }).then(res => {
+                    console.log(res)
+                    let yesterday = this.timestamp(this.getDateStr(0))
+                    let endDay = this.timestamp(this.getDateStr(this.offset))
+                    let episodes = res.data
+                    let filterEpisodes = episodes.filter((episode) => {
+                        if (episode['air_date']){
+                            return this.timestamp(episode['air_date']) >= yesterday && this.timestamp(episode['air_date']) <= endDay
+                        }else {
+                            return false
+                        }
+                    })
+                    let sortEpisodes= filterEpisodes.sort((a,b)=>{
+                            return this.timestamp(a['air_date'])-this.timestamp(b['air_date'])
+                        }
+                    )
+                    let groupEpisodes = this.groupBy(sortEpisodes, episode => {
+                        return episode['air_date']
+                    })
+
+                    let group={}
+                    for(let key in groupEpisodes){
+                        let list=groupEpisodes[key]
+                        let tvGroup=this.groupBy(list, episode => {
+                            return episode['show_id']
+                        })
+                        group[key]=tvGroup
+                    }
+                    this.date_dict = group
+                    if (episodes.length==0){
+                        this.status=false
+                    }else {
+                        this.status=true
+                    }
+
+                }).catch(e => {
+                    this.status=false
+                });
+            },
+            timestamp(date){
+                return date.replaceAll("-", "")
+            },
+
+            groupBy(list, fn) {
+                const groups = {};
+                list.forEach(function (o) {
+                    // const group = JSON.stringify(fn(o));
+                    const group = fn(o);
+                    groups[group] = groups[group] || [];
+                    groups[group].push(o);
+                });
+                return groups;
+            },
+
+        },
+        mounted() {
+            this.getEpisodes()
+        }
+    });
+    app.use(vant);
+    app.use(vant.Lazyload);
+    app.mount('#app');
+
+</script>
+</body>
+</html>

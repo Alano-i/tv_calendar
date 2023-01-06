@@ -1,0 +1,22 @@
+{
+  "name": "tv_calendar",
+  "title": "剧集日历",
+  "author": "oreki",
+  "description": "根据订阅的剧集，查看接下来7天的更新计划。\n对于配置了MR访问地址的用户，点击微信推送内容可跳转到日历页面。\n点击左下角问号，进入日历。",
+  "version": "0.2",
+  "requirements": [],
+  "configField": [
+    {
+      "fieldName": "uid",
+      "fieldType": "Enum",
+      "label": "推送用户",
+      "helperText": "选择接收推送的用户,用户管理要独立设置推送配置才生效",
+      "enumValuesRef": "UserList",
+      "multiValue": true
+    }
+  ],
+  "logoUrl": "/plugins/tv_calendar/logo.jpg",
+  "githubUrl": null,
+  "helpDocUrl": "/static/tv_calendar.html",
+  "dependencies": null
+}
