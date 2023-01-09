@@ -52,7 +52,7 @@
                 <van-divider :style="{ fontSize:'22px' ,color: '#ffffff', borderColor: '#3e3e3e', padding: '5px 16px 1px 16px' }" class="font-num text-center">
                     <span style="opacity: 0.8; padding-right: 3px">{{dateFormat(key)}}</span><span style="opacity: 0.8; padding-left: 3px">{{getWeek(key)}}</span>
                 </van-divider>
-                <van-grid :border="false"  :gutter="15" :column-num="isSmallScreen ? 3 : 8">
+                <van-grid :border="false"  :gutter="15" :column-num="isSmallScreen ? 3 : 9">
                     <van-grid-item v-for="(list,key2,j) in val" :key="j" text="文字" style="border-radius: 10px;"  @click="toDetail(list[0].show_id,list[0].season_number)">
                         <van-image
                                 loading
@@ -67,6 +67,7 @@
                     </van-grid-item>
                 </van-grid>
             </template>
+            <div style="height: 50px;"></div>
             <van-back-top />
         </template>
     </van-config-provider>
