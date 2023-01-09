@@ -35,6 +35,20 @@
             display: -webkit-box;
             -webkit-box-orient: vertical;
         }
+        .text-ellipsis-2 {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+        .text-ellipsis-5 {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 5;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
     </style>
 </head>
 <body>
@@ -45,13 +59,38 @@
         </template>
         <template v-else>
             <template v-for="(item,index) in date_dict" :key="index">
-                <van-card :title="'第'+item.episode_number+'集 '+getTitle(item.name)" :tag="item.vote_average.toString()">
+                <div v-if="index == 0">
+                    <div style="display: flex; align-items: center;">
+                        <van-image
+                            style="width:160px; height: 224px; border-radius: 10px; overflow: hidden; margin-top: 20px;margin-left: 12px;margin-right: 10px;margin-bottom: 20px;"
+                            lazy-load
+                            :src="imageBaseUrl+item.season_poster"
+                        ></van-image>
+                        <div style="width: calc(100vw - 160px - 24px); height: 224px; display: flex; align-items: center;">
+                            <div>
+                                <h5 style="font-size: 24px; opacity: 0.9; font-weight: bold; margin-top: 0px; margin-bottom: 0px;" class="text-ellipsis-5">
+                                    {{ item.tv_name }}
+                                </h5>
+                                <p style="color: #ffffff; opacity: 0.9; font-size: 17px; padding-top: 4px; margin: 0; text-align:left;">{{'第 '+item.season_number+' 季 · 共 '+date_dict.length+' 集'}}</p>
+                                <p style="color: #ffffff; opacity: 0.65; font-size: 12px; padding-top: 4px; margin: 0; text-align:left;">{{date_dict[0].air_date+' - '+date_dict[date_dict.length - 1].air_date+' 更新'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height: 1px; background-color: #3e3e3e; opacity: 0.5; margin: 0px 12px 0px 12px"></div>
+                </div>
+                <van-card :style="{ margin:'0px', padding: '20px 12px 0px 12px' }" :tag="item.vote_average>0?item.vote_average.toString():''">
                     <template #thumb>
                         <van-image
                                 v-if="item.still_path!=null"
                                 style="width:160px;height:90px;border-radius: 20px;"
                                 lazy-load
                                 :src="imageBaseUrl+item.still_path"
+                        ></van-image>
+                        <van-image
+                                v-else-if="item.backdrop_path!=null"
+                                style="width:160px;height:90px;border-radius: 20px;"
+                                lazy-load
+                                :src="imageBaseUrl+item.backdrop_path"
                         ></van-image>
                         <van-image
                                 v-else-if="item.season_poster!=null"
@@ -66,17 +105,21 @@
                                 :src="imageBaseUrl+item.tv_poster"
                         ></van-image>
                     </template>
+                    
                     <template #desc>
-                        {{dateFormat(item.air_date)+' '+getWeek(item.air_date)}}
+                        <div style="height: 90px; display: flex; align-items: center;">
+                            <div>
+                                <h5 class="text-ellipsis-2" style="font-size: 14px; opacity: 0.9; font-weight: bold; margin-top: -2px; margin-bottom: 4px;">
+                                    {{ item.episode_number + ' - ' + (getTitle(item.name) || ('第' + item.episode_number + '集')) }}
+                                </h5>
+                                <span style="color: #ffffff; opacity: 0.9;">{{dateFormat(item.air_date)+' '+getWeek(item.air_date)}}</span>
+                                <p style="color: #ffffff; opacity: 0.5; font-size: 11px; padding-top: 4px; margin: 0; text-align:left;" class="text-ellipsis">{{item.overview}}</p>
+                            </div>
+                        </div>
                     </template>
-                    <template #tags>
-                        <p style="color: #909399;font-size: 10px;text-align:left;text-indent:20px;" class="text-ellipsis">{{item.overview}}</p>
-                    </template>
-                    <!--                <template #footer >-->
-                    <!--                    <van-rate color="#ffd21e" v-model="item.vote_average" count="5"   allow-half />-->
-                    <!--                </template>-->
                 </van-card>
             </template>
+            <div style="height: 50px;"></div>
             <van-back-top />
         </template>
 
@@ -137,6 +180,7 @@
                 axios({
                     method: 'get',
                     url: '/static/original.json'
+                    // url: 'original.json'
                 }).then(res => {
                     let episodes = res.data
                     let filterEpisodes = episodes.filter((episode) => {
