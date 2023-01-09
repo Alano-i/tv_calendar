@@ -1,6 +1,6 @@
 {
   "name": "tv_calendar_Alano",
-  "title": "追剧日历",
+  "title": "追剧日历_Alano",
   "author": "oreki",
   "description": "根据订阅的剧集，查看接下来7天的更新计划。\n对于配置了MR访问地址的用户，点击微信推送内容可跳转到日历页面。\n点击左下角问号，进入日历。",
   "version": "0.1",
@@ -22,7 +22,7 @@
       "defaultValue": "https://raw.githubusercontent.com/Alano-i/wecom-notification/dc049e77392949f3758b4476feebe3a17fe0f855/MR-Plugins/tv_calendar/tv_calendar/pic/tv_calendar.png"
     }
   ],
-  "logoUrl": "/plugins/tv_calendar/logo.jpg",
+  "logoUrl": "/plugins/tv_calendar_Alano/logo.jpg",
   "githubUrl": null,
   "helpDocUrl": "/static/tv_calendar.html",
   "dependencies": null
