@@ -50,13 +50,14 @@
         <template v-else>
             <template v-for="(val,key,i) in date_dict" :key="i">
                 <van-divider :style="{ fontSize:'22px' ,color: '#ffffff', borderColor: '#3e3e3e', padding: '5px 16px 1px 16px' }" class="font-num text-center">
-                    <span style="opacity: 0.8; padding-right: 3px">{{dateFormat(key)}}</span><span style="opacity: 0.8; padding-left: 3px">{{getWeek(key)}}</span>
+                    <span style="opacity: 0.8">{{dateFormat(key)}}</span>
+                    <span style="opacity: 0.8; padding-left: 10px">{{getWeek(key)}}</span>
+                    <span v-if="getTodayWeek(key)" style="opacity: 0.8; padding-left: 3px">·</span>
+                    <span style="opacity: 0.8; padding-left: 3px">{{getTodayWeek(key)}}</span>
                 </van-divider>
                 <van-grid :border="false"  :gutter="15" :column-num="isSmallScreen ? 3 : 9">
                     <van-grid-item v-for="(list,key2,j) in val" :key="j" text="文字" style="border-radius: 10px;"  @click="toDetail(list[0].show_id,list[0].season_number)">
                         <van-image
-                                loading
-                                loading-text="加载中"
                                 style="width: 100%; height: 87%; border-radius: 10px; overflow: hidden"
                                 lazy-load
                                 :src="list[0].season_poster!=null?imageBaseUrl+list[0].season_poster:imageBaseUrl+list[0].tv_poster"
@@ -142,8 +143,19 @@
                 location.href = 'episode.html?showId=' + showId + "&seasonNumber=" + seasonNumber
             },
             getWeek(date) {
-                const weekArr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+                // const weekArr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+                const weekArr = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
                 return weekArr[new Date(date).getDay()]
+            },
+            getTodayWeek(date) {
+                const inputDate = new Date(date)
+                const inputWeek = inputDate.getDay()
+                const currentWeek = new Date().getDay()
+                if (inputWeek === currentWeek) {
+                    return '今天'
+                } else {
+                    return ''
+                }
             },
             getDateStr(addDayCount) {
                 var dd = new Date();
